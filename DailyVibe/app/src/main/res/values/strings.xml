@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Daily Vibe</string>
+    <string name="open_journal">Open Journal</string>
+    <string name="title_activity_posts">PostsActivity</string>
+    <string name="post">Post</string>
+    <string name="post_hint">What\'s on your mind?</string>
+    <string name="posts_toolbar_title">Your Journal</string>
+    <string name="posts_toolbar_description">Create, view and update journal entries...</string>
+</resources>
