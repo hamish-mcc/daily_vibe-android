@@ -1,6 +1,7 @@
 package com.massey.a3.dailyvibe;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.app.DatePickerDialog;
 import android.os.Bundle;
@@ -15,6 +16,8 @@ import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.massey.a3.dailyvibe.database.Post;
+import com.massey.a3.dailyvibe.database.PostViewModel;
 import com.massey.a3.tensorflow.lite.textclassification.TextClassificationClient;
 import com.massey.a3.tensorflow.lite.textclassification.Result;
 
@@ -38,6 +41,7 @@ public class PostsActivity extends AppCompatActivity {
     private Date mUseDate;
     private SimpleDateFormat mDateFormat;
     private String mDateString;
+    private PostViewModel mPostViewModel;
 
 
     @Override
@@ -46,13 +50,27 @@ public class PostsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_posts);
         Log.i(TAG, "onCreate");
 
+        // UI
+        mPostsTextView = findViewById(R.id.viewPosts);
+        mInputPostText = findViewById(R.id.editPost);
+        mScrollView = findViewById(R.id.postsView);
+
         // Show current date
-        mUseDate = Calendar.getInstance().getTime();
+        Date today = Calendar.getInstance().getTime();
+        mUseDate = removeTime(today);
+        Log.i(TAG, "Using date " + mUseDate.toString());
         mDateFormat = new SimpleDateFormat(USE_DATE_FORMAT, Locale.getDefault());
         mDateString = mDateFormat.format(mUseDate);
 
         mDateView = findViewById(R.id.dateTextView);
         mDateView.setText(mDateString);
+
+        // Connect to DB
+        mPostViewModel = new PostViewModel(this.getApplication(), mUseDate);
+        mPostViewModel.getAllPostsByDate().observe(this, posts -> {
+            // Display post on the screen if it isn't already displayed
+            Log.i(TAG, posts.toString());
+        });
 
         ImageButton dateButton = findViewById(R.id.buttonDateSelect);
 
@@ -68,10 +86,6 @@ public class PostsActivity extends AppCompatActivity {
         postButton.setOnClickListener((View v) -> {
             newPost(mInputPostText.getText().toString());
         });
-
-        mPostsTextView = findViewById(R.id.viewPosts);
-        mInputPostText = findViewById(R.id.editPost);
-        mScrollView = findViewById(R.id.scroll_view);
     }
 
     @Override
@@ -100,16 +114,24 @@ public class PostsActivity extends AppCompatActivity {
                     // Run text classification with TF Lite.
                     List<Result> results = mClient.classify(text);
 
-                    // Show classification result on screen
-                    //showResult(text, results);
-
                     Bundle resultBundle = bundleResult(text, results);
+
+                    // Create post object and insert into db
+                    // TODO Is there a way of doing this without the Bundle?
+                    Post post = new Post(
+                            (Date) resultBundle.getSerializable("date"),
+                            resultBundle.getString("post"),
+                            resultBundle.getFloat("positive"),
+                            resultBundle.getFloat("negative")
+                    );
+
+                    mPostViewModel.insert(post);
                     showResult(resultBundle);
 
                 });
     }
 
-    // TODO Create a method that adds the post to the display (however it is being displayed)
+    // TODO Implement a method that adds the post to the display (however it is being displayed)
     private void showResult(Bundle resultBundle) {
         // Run on UI thread as we'll updating our app UI
         runOnUiThread(
@@ -152,9 +174,21 @@ public class PostsActivity extends AppCompatActivity {
                         mUseDate = cal.getTime();
                         mDateString = mDateFormat.format(mUseDate);
                         mDateView.setText(mDateString);
+                        Log.i(TAG, "Using date " + mUseDate.toString());
+                        // TODO Get posts from db and update display when date is changed.
                     }
                 }, year, month, dayOfMonth);
         datePickerDialog.show();
+    }
+
+    public static Date removeTime(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 
 }

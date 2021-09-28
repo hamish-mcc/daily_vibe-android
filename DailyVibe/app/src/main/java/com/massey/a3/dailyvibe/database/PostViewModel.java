@@ -5,7 +5,7 @@ import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 
 public class PostViewModel extends AndroidViewModel {
@@ -19,7 +19,7 @@ public class PostViewModel extends AndroidViewModel {
         mAllPostsByDate = mRepository.getAllPostsByDate();
     }
 
-    LiveData<List<Post>> getAllPostsByDate() {
+    public LiveData<List<Post>> getAllPostsByDate() {
         return mAllPostsByDate;
     }
 

@@ -24,7 +24,7 @@
         android:id="@+id/buttonDateSelect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@id/scroll_view"
+        app:layout_constraintBottom_toTopOf="@id/postsView"
         app:layout_constraintLeft_toRightOf="@id/dateTextView"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbarPosts"
@@ -39,13 +39,13 @@
         android:text="Date Here"
         android:textAlignment="center"
         android:textSize="28sp"
-        app:layout_constraintBottom_toTopOf="@id/scroll_view"
+        app:layout_constraintBottom_toTopOf="@id/postsView"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/buttonDateSelect"
         app:layout_constraintTop_toBottomOf="@id/toolbarPosts" />
 
     <ScrollView
-        android:id="@+id/scroll_view"
+        android:id="@+id/postsView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@id/editPost"

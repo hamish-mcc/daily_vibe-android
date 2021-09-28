@@ -1,13 +1,15 @@
 package com.massey.a3.dailyvibe.database;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 
 public class PostRepository {
+    private static final String TAG = "PostRepository";
     private PostDao mPostDao;
     private LiveData<List<Post>> mAllPostsByDate;
     private Post randomPost;
@@ -16,6 +18,7 @@ public class PostRepository {
         PostDatabase db = PostDatabase.getDatabase(application);
         mPostDao = db.postDao();
         mAllPostsByDate = mPostDao.getAllByDate(date);
+        Log.i(TAG, "Got posts for " + date.toString());
     }
 
     // Room executes all queries on a separate thread.
@@ -28,6 +31,7 @@ public class PostRepository {
     // that you're not doing any long running operations on the main thread, blocking the UI.
     void insert(Post post) {
         PostDatabase.databaseWriteExecutor.execute(() -> {
+            Log.i(TAG, "Inserted " + post.text + " on " + post.date.toString());
             mPostDao.insertPost(post);
         });
     }
