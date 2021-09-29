@@ -26,4 +26,6 @@ public class PostViewModel extends AndroidViewModel {
     public void insert(Post post) {
         mRepository.insert(post);
     }
+
+    public void deleteAll() {mRepository.deleteAll();}
 }

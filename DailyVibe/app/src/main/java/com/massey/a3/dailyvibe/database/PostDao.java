@@ -23,5 +23,8 @@ public interface PostDao {
     @Delete
     void deletePost(Post post);
 
+    @Query("DELETE FROM posts")
+    void deleteAll();
+
     // TODO Write queries for data analysis and visualisation here. Use LiveData
 }

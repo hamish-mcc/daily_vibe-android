@@ -1,18 +1,30 @@
 package com.massey.a3.dailyvibe;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.ListAdapter;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
+import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -21,9 +33,12 @@ import com.massey.a3.dailyvibe.database.PostViewModel;
 import com.massey.a3.tensorflow.lite.textclassification.TextClassificationClient;
 import com.massey.a3.tensorflow.lite.textclassification.Result;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,7 +48,7 @@ public class PostsActivity extends AppCompatActivity {
 
     private TextClassificationClient mClient;
 
-    private TextView mPostsTextView;
+    private RecyclerView mPostsView;
     private EditText mInputPostText;
     private Handler mHandler;
     private ScrollView mScrollView;
@@ -42,6 +57,66 @@ public class PostsActivity extends AppCompatActivity {
     private SimpleDateFormat mDateFormat;
     private String mDateString;
     private PostViewModel mPostViewModel;
+    private PostsAdapter mPostsAdapter;
+
+    public static class PostsAdapter extends ListAdapter<Post, PostsAdapter.PostViewHolder> {
+
+        protected PostsAdapter(DiffUtil.ItemCallback<Post> diffCallback) {
+            super(diffCallback);
+        }
+
+        @Override
+        public PostViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
+            View postItem = layoutInflater.inflate(R.layout.post_item, parent, false);
+            PostViewHolder vh = new PostViewHolder(postItem);
+            return vh;
+        }
+
+        @Override
+        public void onBindViewHolder(PostViewHolder vh, int position) {
+            Post current = getItem(position);
+            vh.bind(current);
+        }
+
+        public static class PostViewHolder extends RecyclerView.ViewHolder {
+            public ImageView emojiView;
+            public TextView postText;
+            public TextView posConfidence;
+            public TextView negConfidence;
+            public LinearLayout postLayout;
+
+            public PostViewHolder(View postView) {
+                super(postView);
+                this.emojiView = postView.findViewById(R.id.emojiView);
+                this.postText = postView.findViewById(R.id.postText);
+                this.posConfidence = postView.findViewById(R.id.posView);
+                this.negConfidence = postView.findViewById(R.id.negView);
+                this.postLayout = (LinearLayout) postView.findViewById(R.id.postLayout);
+            }
+
+            @SuppressLint("SetTextI18n")
+            public void bind(Post p) {
+                postText.setText(p.text);
+                posConfidence.setText(p.confidencePositive.toString());
+                negConfidence.setText(p.confidenceNegative.toString());
+                // TODO Set an emoji based on confidence
+            }
+        }
+
+        static class PostDiff extends DiffUtil.ItemCallback<Post> {
+
+            @Override
+            public boolean areItemsTheSame(Post oldItem, Post newItem) {
+                return oldItem == newItem;
+            }
+
+            @Override
+            public boolean areContentsTheSame(Post oldItem, Post newItem) {
+                return oldItem.uid == newItem.uid;
+            }
+        }
+    }
 
 
     @Override
@@ -50,10 +125,11 @@ public class PostsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_posts);
         Log.i(TAG, "onCreate");
 
-        // UI
-        mPostsTextView = findViewById(R.id.viewPosts);
-        mInputPostText = findViewById(R.id.editPost);
-        mScrollView = findViewById(R.id.postsView);
+        // Set up recycler view and adapter
+        mPostsView = findViewById(R.id.postsView);
+        mPostsAdapter = new PostsAdapter(new PostsAdapter.PostDiff());
+        mPostsView.setAdapter(mPostsAdapter);
+        mPostsView.setLayoutManager(new LinearLayoutManager(this));
 
         // Show current date
         Date today = Calendar.getInstance().getTime();
@@ -66,26 +142,51 @@ public class PostsActivity extends AppCompatActivity {
         mDateView.setText(mDateString);
 
         // Connect to DB
-        mPostViewModel = new PostViewModel(this.getApplication(), mUseDate);
-        mPostViewModel.getAllPostsByDate().observe(this, posts -> {
-            // Display post on the screen if it isn't already displayed
-            Log.i(TAG, posts.toString());
-        });
+        getPosts(mPostsAdapter, mUseDate);
 
+        // Change the date
         ImageButton dateButton = findViewById(R.id.buttonDateSelect);
 
         dateButton.setOnClickListener((View v) -> {
             changeDate();
         });
 
+        // Set up sentiment analysis
         mClient = new TextClassificationClient(getApplicationContext());
         mHandler = new Handler(Looper.getMainLooper());
 
+        // Input
+        mInputPostText = findViewById(R.id.editPost);
         Button postButton = findViewById(R.id.buttonPost);
 
         postButton.setOnClickListener((View v) -> {
             newPost(mInputPostText.getText().toString());
+            mInputPostText.setText("");
         });
+    }
+
+    public void getPosts(PostsAdapter adapter, Date date) {
+        Log.i(TAG, "getPosts" + date.toString());
+        mPostViewModel = new PostViewModel(this.getApplication(), date);
+        mPostViewModel.getAllPostsByDate().observe(this, adapter::submitList);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        Log.i(TAG, "Inflate menu");
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.posts_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.deletePosts) {
+            mPostViewModel.deleteAll();
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -114,49 +215,29 @@ public class PostsActivity extends AppCompatActivity {
                     // Run text classification with TF Lite.
                     List<Result> results = mClient.classify(text);
 
-                    Bundle resultBundle = bundleResult(text, results);
+                    HashMap<String, Float> confidence = new HashMap<>();
+
+                    for (int i = 0; i < results.size(); i++) {
+                        Result result = results.get(i);
+                        confidence.put(result.getTitle(), result.getConfidence());
+                    }
 
                     // Create post object and insert into db
-                    // TODO Is there a way of doing this without the Bundle?
                     Post post = new Post(
-                            (Date) resultBundle.getSerializable("date"),
-                            resultBundle.getString("post"),
-                            resultBundle.getFloat("positive"),
-                            resultBundle.getFloat("negative")
+                            mUseDate,
+                            text,
+                            confidence.get("positive"),
+                            confidence.get("negative")
                     );
 
                     mPostViewModel.insert(post);
-                    showResult(resultBundle);
+                    getPosts(mPostsAdapter, mUseDate);
 
                 });
     }
 
-    // TODO Implement a method that adds the post to the display (however it is being displayed)
-    private void showResult(Bundle resultBundle) {
-        // Run on UI thread as we'll updating our app UI
-        runOnUiThread(
-                () -> {
-                    // Append the result to the UI.
-                    mPostsTextView.append(resultBundle.toString() + "\n\n");
+    // TODO Implement a method that adds the post to the display (however it is being displayed)??
 
-                    // Clear the input text.
-                    mInputPostText.getText().clear();
-
-                    // Scroll to the bottom to show latest entry's classification result.
-                    mScrollView.post(() -> mScrollView.fullScroll(View.FOCUS_DOWN));
-                });
-    }
-
-    private Bundle bundleResult(final String inputText, final List<Result> resultList) {
-        Bundle resultBundle = new Bundle();
-        resultBundle.putSerializable("date", mUseDate);
-        resultBundle.putString("post", inputText);
-        for (int i = 0; i < resultList.size(); i++) {
-            Result result = resultList.get(i);
-            resultBundle.putFloat(result.getTitle(), result.getConfidence());
-        }
-        return resultBundle;
-    }
 
     private void changeDate() {
         Calendar calendar = Calendar.getInstance();
@@ -175,7 +256,7 @@ public class PostsActivity extends AppCompatActivity {
                         mDateString = mDateFormat.format(mUseDate);
                         mDateView.setText(mDateString);
                         Log.i(TAG, "Using date " + mUseDate.toString());
-                        // TODO Get posts from db and update display when date is changed.
+                        getPosts(mPostsAdapter, mUseDate);
                     }
                 }, year, month, dayOfMonth);
         datePickerDialog.show();

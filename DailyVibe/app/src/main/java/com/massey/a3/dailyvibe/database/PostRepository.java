@@ -35,4 +35,11 @@ public class PostRepository {
             mPostDao.insertPost(post);
         });
     }
+
+    void deleteAll() {
+        PostDatabase.databaseWriteExecutor.execute(() -> {
+            Log.i(TAG, "Deleted all posts...");
+            mPostDao.deleteAll();
+        });
+    }
 }

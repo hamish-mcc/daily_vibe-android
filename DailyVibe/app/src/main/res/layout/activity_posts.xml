@@ -7,28 +7,13 @@
     android:padding="12dp"
     tools:context=".PostsActivity">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbarPosts"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme"
-        app:layout_constraintBottom_toTopOf="@id/dateTextView"
-        app:layout_constraintTop_toTopOf="parent"
-        app:subtitle="@string/posts_toolbar_description"
-        app:title="@string/posts_toolbar_title"
-        tools:layout_editor_absoluteX="12dp" />
-
     <ImageButton
         android:id="@+id/buttonDateSelect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@id/postsView"
         app:layout_constraintLeft_toRightOf="@id/dateTextView"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbarPosts"
-        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@android:drawable/ic_menu_my_calendar" />
 
     <TextView
@@ -36,27 +21,20 @@
         android:layout_width="0dp"
         android:layout_height="60dp"
         android:gravity="center"
-        android:text="Date Here"
         android:textAlignment="center"
         android:textSize="28sp"
-        app:layout_constraintBottom_toTopOf="@id/postsView"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/buttonDateSelect"
-        app:layout_constraintTop_toBottomOf="@id/toolbarPosts" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <ScrollView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/postsView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@id/editPost"
-        app:layout_constraintTop_toBottomOf="@id/dateTextView"
-        tools:layout_editor_absoluteX="12dp">
-
-        <TextView
-            android:id="@+id/viewPosts"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </ScrollView>
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/dateTextView" />
 
     <EditText
         android:id="@+id/editPost"
