@@ -51,7 +51,6 @@ public class PostsActivity extends AppCompatActivity {
     private RecyclerView mPostsView;
     private EditText mInputPostText;
     private Handler mHandler;
-    private ScrollView mScrollView;
     private TextView mDateView;
     private Date mUseDate;
     private SimpleDateFormat mDateFormat;
@@ -66,7 +65,7 @@ public class PostsActivity extends AppCompatActivity {
         }
 
         @Override
-        public PostViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public @NotNull PostViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
             View postItem = layoutInflater.inflate(R.layout.post_item, parent, false);
             PostViewHolder vh = new PostViewHolder(postItem);
@@ -80,7 +79,6 @@ public class PostsActivity extends AppCompatActivity {
         }
 
         public static class PostViewHolder extends RecyclerView.ViewHolder {
-            public ImageView emojiView;
             public TextView postText;
             public TextView posConfidence;
             public TextView negConfidence;
@@ -88,7 +86,6 @@ public class PostsActivity extends AppCompatActivity {
 
             public PostViewHolder(View postView) {
                 super(postView);
-                this.emojiView = postView.findViewById(R.id.emojiView);
                 this.postText = postView.findViewById(R.id.postText);
                 this.posConfidence = postView.findViewById(R.id.posView);
                 this.negConfidence = postView.findViewById(R.id.negView);
@@ -99,7 +96,12 @@ public class PostsActivity extends AppCompatActivity {
             public void bind(Post p) {
                 postText.setText(p.text);
                 posConfidence.setText(p.confidencePositive.toString());
-                negConfidence.setText(p.confidenceNegative.toString());
+                // TODO Implement a range of emojis depending on score
+                //  https://www.unicode.org/emoji/charts/full-emoji-list.html
+                String pos = String.format("%s %.2f%%", getEmojiByUnicode(0x1F642), p.confidencePositive*100);
+                String neg = String.format("%s %.2f%%", getEmojiByUnicode(0x1F641), p.confidenceNegative*100);
+                posConfidence.setText(pos);
+                negConfidence.setText(neg);
                 // TODO Set an emoji based on confidence
             }
         }
@@ -107,7 +109,7 @@ public class PostsActivity extends AppCompatActivity {
         static class PostDiff extends DiffUtil.ItemCallback<Post> {
 
             @Override
-            public boolean areItemsTheSame(Post oldItem, Post newItem) {
+            public boolean areItemsTheSame(@NotNull Post oldItem, @NotNull Post newItem) {
                 return oldItem == newItem;
             }
 
@@ -142,7 +144,7 @@ public class PostsActivity extends AppCompatActivity {
         mDateView.setText(mDateString);
 
         // Connect to DB
-        getPosts(mPostsAdapter, mUseDate);
+        refreshPosts();
 
         // Change the date
         ImageButton dateButton = findViewById(R.id.buttonDateSelect);
@@ -163,12 +165,6 @@ public class PostsActivity extends AppCompatActivity {
             newPost(mInputPostText.getText().toString());
             mInputPostText.setText("");
         });
-    }
-
-    public void getPosts(PostsAdapter adapter, Date date) {
-        Log.i(TAG, "getPosts" + date.toString());
-        mPostViewModel = new PostViewModel(this.getApplication(), date);
-        mPostViewModel.getAllPostsByDate().observe(this, adapter::submitList);
     }
 
     @Override
@@ -214,33 +210,23 @@ public class PostsActivity extends AppCompatActivity {
                 () -> {
                     // Run text classification with TF Lite.
                     List<Result> results = mClient.classify(text);
-
+                    // Map results
                     HashMap<String, Float> confidence = new HashMap<>();
-
                     for (int i = 0; i < results.size(); i++) {
                         Result result = results.get(i);
                         confidence.put(result.getTitle(), result.getConfidence());
                     }
-
                     // Create post object and insert into db
-                    Post post = new Post(
-                            mUseDate,
-                            text,
-                            confidence.get("positive"),
-                            confidence.get("negative")
-                    );
-
+                    Post post = new Post(mUseDate, text, confidence.get("positive"),
+                            confidence.get("negative"));
                     mPostViewModel.insert(post);
-                    getPosts(mPostsAdapter, mUseDate);
-
+                    refreshPosts();
                 });
     }
 
-    // TODO Implement a method that adds the post to the display (however it is being displayed)??
-
-
     private void changeDate() {
         Calendar calendar = Calendar.getInstance();
+        calendar.setTime(mUseDate);
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
@@ -256,7 +242,7 @@ public class PostsActivity extends AppCompatActivity {
                         mDateString = mDateFormat.format(mUseDate);
                         mDateView.setText(mDateString);
                         Log.i(TAG, "Using date " + mUseDate.toString());
-                        getPosts(mPostsAdapter, mUseDate);
+                        refreshPosts();
                     }
                 }, year, month, dayOfMonth);
         datePickerDialog.show();
@@ -272,4 +258,13 @@ public class PostsActivity extends AppCompatActivity {
         return cal.getTime();
     }
 
+    public static String getEmojiByUnicode(int unicode){
+        return new String(Character.toChars(unicode));
+    }
+
+    public void refreshPosts() {
+        Log.i(TAG, "getPosts" + mUseDate.toString());
+        mPostViewModel = new PostViewModel(this.getApplication(), mUseDate);
+        mPostViewModel.getAllPostsByDate().observe(this, mPostsAdapter::submitList);
+    }
 }

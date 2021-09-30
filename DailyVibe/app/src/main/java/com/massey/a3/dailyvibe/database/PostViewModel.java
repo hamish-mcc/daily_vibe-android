@@ -11,7 +11,7 @@ import java.util.List;
 public class PostViewModel extends AndroidViewModel {
     private PostRepository mRepository;
 
-    private final LiveData<List<Post>> mAllPostsByDate;
+    private LiveData<List<Post>> mAllPostsByDate;
 
     public PostViewModel(Application application, Date date) {
         super(application);
@@ -19,13 +19,21 @@ public class PostViewModel extends AndroidViewModel {
         mAllPostsByDate = mRepository.getAllPostsByDate();
     }
 
+    public PostViewModel(Application application) {
+        super(application);
+        mRepository = new PostRepository(application);
+    }
+
     public LiveData<List<Post>> getAllPostsByDate() {
         return mAllPostsByDate;
     }
+
 
     public void insert(Post post) {
         mRepository.insert(post);
     }
 
     public void deleteAll() {mRepository.deleteAll();}
+
+    public LiveData<Post> getRandom() {return mRepository.getRandom(); }
 }

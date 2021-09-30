@@ -15,7 +15,7 @@ public interface PostDao {
     LiveData<List<Post>> getAllByDate(Date date);
 
     @Query("SELECT * FROM posts ORDER BY RANDOM() LIMIT 1")
-    Post getRandom();
+    LiveData<Post> getRandom();
 
     @Insert
     void insertPost(Post post);
@@ -24,7 +24,11 @@ public interface PostDao {
     void deletePost(Post post);
 
     @Query("DELETE FROM posts")
-    void deleteAll();
+    void deleteAllPosts();
 
-    // TODO Write queries for data analysis and visualisation here. Use LiveData
+    @Query("SELECT * FROM posts")
+    LiveData<List<Post>> getAllPosts();
+
+    @Query("SELECT (confidence_positive - confidence_negative) AS confidence_net FROM posts ORDER BY date ASC")
+    LiveData<List<Float>> getScores();
 }

@@ -12,7 +12,6 @@ public class Post {
     @PrimaryKey (autoGenerate = true)
     public int uid;
 
-    // TODO Need to solve Cannot figure out how to save this field into database. You can consider adding a type converter for it.
     @ColumnInfo(name = "date")
     public Date date;
 
