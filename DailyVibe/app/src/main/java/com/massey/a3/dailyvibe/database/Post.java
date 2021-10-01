@@ -18,10 +18,10 @@ public class Post {
     @ColumnInfo(name = "text")
     public String text;
 
-    @ColumnInfo(name = "confidence_positive")
+    @ColumnInfo(name = "confidencePositive")
     public Float confidencePositive;
 
-    @ColumnInfo(name = "confidence_negative")
+    @ColumnInfo(name = "confidenceNegative")
     public Float confidenceNegative;
 
     public Post(Date date, String text, Float confidencePositive, Float confidenceNegative) {

@@ -1,6 +1,5 @@
 package com.massey.a3.dailyvibe;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -9,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
-import android.media.browse.MediaBrowser;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,12 +18,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.massey.a3.dailyvibe.database.Post;
@@ -48,7 +43,6 @@ public class PostsActivity extends AppCompatActivity {
 
     private TextClassificationClient mClient;
 
-    private RecyclerView mPostsView;
     private EditText mInputPostText;
     private Handler mHandler;
     private TextView mDateView;
@@ -68,8 +62,7 @@ public class PostsActivity extends AppCompatActivity {
         public @NotNull PostViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
             View postItem = layoutInflater.inflate(R.layout.post_item, parent, false);
-            PostViewHolder vh = new PostViewHolder(postItem);
-            return vh;
+            return new PostViewHolder(postItem);
         }
 
         @Override
@@ -89,10 +82,10 @@ public class PostsActivity extends AppCompatActivity {
                 this.postText = postView.findViewById(R.id.postText);
                 this.posConfidence = postView.findViewById(R.id.posView);
                 this.negConfidence = postView.findViewById(R.id.negView);
-                this.postLayout = (LinearLayout) postView.findViewById(R.id.postLayout);
+                this.postLayout = postView.findViewById(R.id.postLayout);
             }
 
-            @SuppressLint("SetTextI18n")
+            @SuppressLint({"SetTextI18n", "DefaultLocale"})
             public void bind(Post p) {
                 postText.setText(p.text);
                 posConfidence.setText(p.confidencePositive.toString());
@@ -128,10 +121,10 @@ public class PostsActivity extends AppCompatActivity {
         Log.i(TAG, "onCreate");
 
         // Set up recycler view and adapter
-        mPostsView = findViewById(R.id.postsView);
+        RecyclerView postsView = findViewById(R.id.postsView);
         mPostsAdapter = new PostsAdapter(new PostsAdapter.PostDiff());
-        mPostsView.setAdapter(mPostsAdapter);
-        mPostsView.setLayoutManager(new LinearLayoutManager(this));
+        postsView.setAdapter(mPostsAdapter);
+        postsView.setLayoutManager(new LinearLayoutManager(this));
 
         // Show current date
         Date today = Calendar.getInstance().getTime();
@@ -149,9 +142,7 @@ public class PostsActivity extends AppCompatActivity {
         // Change the date
         ImageButton dateButton = findViewById(R.id.buttonDateSelect);
 
-        dateButton.setOnClickListener((View v) -> {
-            changeDate();
-        });
+        dateButton.setOnClickListener((View v) -> changeDate());
 
         // Set up sentiment analysis
         mClient = new TextClassificationClient(getApplicationContext());
@@ -190,9 +181,7 @@ public class PostsActivity extends AppCompatActivity {
         super.onStart();
         Log.v(TAG, "onStart");
         mHandler.post(
-                () -> {
-                    mClient.load();
-                });
+                () -> mClient.load());
     }
 
     @Override
@@ -200,9 +189,7 @@ public class PostsActivity extends AppCompatActivity {
         super.onStop();
         Log.v(TAG, "onStop");
         mHandler.post(
-                () -> {
-                    mClient.unload();
-                });
+                () -> mClient.unload());
     }
 
     private void newPost(final String text) {
@@ -232,18 +219,15 @@ public class PostsActivity extends AppCompatActivity {
         int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(PostsActivity.this,
-                new DatePickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(DatePicker datePicker, int year, int month, int day) {
-                        Calendar cal = Calendar.getInstance();
-                        cal.setTimeInMillis(0);
-                        cal.set(year, month, day, 0, 0, 0);
-                        mUseDate = cal.getTime();
-                        mDateString = mDateFormat.format(mUseDate);
-                        mDateView.setText(mDateString);
-                        Log.i(TAG, "Using date " + mUseDate.toString());
-                        refreshPosts();
-                    }
+                (datePicker, year1, month1, day) -> {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTimeInMillis(0);
+                    cal.set(year1, month1, day, 0, 0, 0);
+                    mUseDate = cal.getTime();
+                    mDateString = mDateFormat.format(mUseDate);
+                    mDateView.setText(mDateString);
+                    Log.i(TAG, "Using date " + mUseDate.toString());
+                    refreshPosts();
                 }, year, month, dayOfMonth);
         datePickerDialog.show();
     }
@@ -264,7 +248,7 @@ public class PostsActivity extends AppCompatActivity {
 
     public void refreshPosts() {
         Log.i(TAG, "getPosts" + mUseDate.toString());
-        mPostViewModel = new PostViewModel(this.getApplication(), mUseDate);
-        mPostViewModel.getAllPostsByDate().observe(this, mPostsAdapter::submitList);
+        mPostViewModel = new PostViewModel(this.getApplication());
+        mPostViewModel.getAllPostsByDate(mUseDate).observe(this, mPostsAdapter::submitList);
     }
 }

@@ -7,6 +7,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 @Dao
@@ -26,9 +27,8 @@ public interface PostDao {
     @Query("DELETE FROM posts")
     void deleteAllPosts();
 
-    @Query("SELECT * FROM posts")
-    LiveData<List<Post>> getAllPosts();
+    @Query("SELECT * FROM posts WHERE date > :from")
+    LiveData<List<Post>> getPostsAfter(Date from);
 
-    @Query("SELECT (confidence_positive - confidence_negative) AS confidence_net FROM posts ORDER BY date ASC")
-    LiveData<List<Float>> getScores();
+    // TODO Querying the variance might also be useful?
 }
