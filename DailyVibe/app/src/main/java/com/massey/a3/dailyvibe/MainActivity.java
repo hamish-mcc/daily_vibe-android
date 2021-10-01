@@ -59,13 +59,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
 
         // Set up spinner
-        Spinner dateSpinnner = findViewById(R.id.dateSpinner);
-        dateSpinnner.setOnItemSelectedListener(this);
+        Spinner dateSpinner = findViewById(R.id.dateSpinner);
+        dateSpinner.setOnItemSelectedListener(this);
 
         ArrayAdapter<String> aa = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, mPeriod);
-        aa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        dateSpinnner.setAdapter(aa);
+                R.layout.spinner_item, mPeriod);
+        aa.setDropDownViewResource(R.layout.spinner_item);
+        dateSpinner.setAdapter(aa);
 
 
         // Get data
@@ -88,10 +88,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         mPostViewModel.getRandom().observe(this, postObserver);
 
-        // TODO Implement chart see https://github.com/PhilJay/MPAndroidChart
         mLineChart = findViewById(R.id.activity_main_linechart);
         configureLineChart();
-
     }
 
     //Performing action onItemSelected and onNothing selected
@@ -137,7 +135,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     try {
                         lineEntries.add(new Entry(post.date.getTime(),
                                 post.confidencePositive - post.confidenceNegative));
+                        Log.i(TAG, post.confidencePositive.toString() + " " + post.confidenceNegative.toString());
                     } catch (NullPointerException e) {
+                        Log.e(TAG, e.getMessage());
                         lineEntries.add(new Entry(post.date.getTime(), 0));
                     }
                 }
@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 mLineChart.setData(lineData);
                 XAxis xAxis = mLineChart.getXAxis();
                 xAxis.resetAxisMinimum();
+                xAxis.resetAxisMaximum();
                 mLineChart.invalidate();
 
         }
