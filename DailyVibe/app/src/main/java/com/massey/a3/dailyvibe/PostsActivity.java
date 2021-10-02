@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.os.Handler;
@@ -95,7 +96,6 @@ public class PostsActivity extends AppCompatActivity {
                 String neg = String.format("%s %.2f%%", getEmojiByUnicode(0x1F641), p.confidenceNegative*100);
                 posConfidence.setText(pos);
                 negConfidence.setText(neg);
-                // TODO Set an emoji based on confidence
             }
         }
 

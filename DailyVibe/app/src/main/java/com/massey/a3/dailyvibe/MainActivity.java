@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -18,6 +19,7 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -41,8 +43,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private LineChart mLineChart;
     private PostViewModel mPostViewModel;
 
-    private final String[] mPeriod = {"Week", "Month", "Year"};
+    private final String[] mPeriod = {"This Week", "This Month", "This Year"};
     private Date mFromDate;
+
+    private Observer<Post> mPostObserver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,11 +55,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         //UI
         Button goToPosts = findViewById(R.id.postsButton);
-        TextView postView = findViewById(R.id.postView);
+        ImageButton refreshRandomPost = findViewById(R.id.refreshButton);
+        TextView postDateView = findViewById(R.id.postDateView);
+        TextView postTextView = findViewById(R.id.postTextView);
 
         goToPosts.setOnClickListener((View v) -> {
             Intent openPosts = new Intent(MainActivity.this, PostsActivity.class);
             this.startActivity(openPosts);
+        });
+
+        refreshRandomPost.setOnClickListener((View v) -> {
+            mPostViewModel.getRandom().observe(this, mPostObserver);
         });
 
         // Set up spinner
@@ -71,22 +81,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Get data
         mPostViewModel = new PostViewModel(this.getApplication());
 
-        final Observer<Post> postObserver = new Observer<Post>() {
+        mPostObserver = new Observer<Post>() {
             @Override
             public void onChanged(Post post) {
-                // TODO Improve format and can have a button to get a different random post
                 try {
                     DateFormat format = new SimpleDateFormat(USE_DATE_FORMAT, Locale.getDefault());
                     String dateString = format.format(post.date);
-                    String display = String.format("%s\n\t%s", dateString, post.text);
-                    postView.setText(display);
+                    String displayDate = String.format("A reflection from %s", dateString);
+                    postDateView.setText(displayDate);
+                    String displayText = String.format("\"%s\"", post.text);
+                    postTextView.setText(displayText);
                 } catch (NullPointerException e) {
                     Log.e(TAG, e.getMessage());
                 }
             }
         };
 
-        mPostViewModel.getRandom().observe(this, postObserver);
+        mPostViewModel.getRandom().observe(this, mPostObserver);
 
         mLineChart = findViewById(R.id.activity_main_linechart);
         configureLineChart();
@@ -128,51 +139,33 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public final Observer<List<Post>> dataObserver = new Observer<List<Post>>() {
         @Override
         public void onChanged(List<Post> posts) {
-            Log.i(TAG, "Adding " + posts.size() + " posts");
-            ArrayList<Entry> lineEntries = new ArrayList<>();
-                for (int i = 0; i < posts.size(); i++) {
-                    Post post = posts.get(i);
-                    try {
-                        lineEntries.add(new Entry(post.date.getTime(),
-                                post.confidencePositive - post.confidenceNegative));
-                        Log.i(TAG, post.confidencePositive.toString() + " " + post.confidenceNegative.toString());
-                    } catch (NullPointerException e) {
-                        Log.e(TAG, e.getMessage());
-                        lineEntries.add(new Entry(post.date.getTime(), 0));
-                    }
-                }
-
-                LineDataSet lineDataSet = new LineDataSet(lineEntries, "Score");
-                lineDataSet.setDrawCircles(true);
-                lineDataSet.setCircleRadius(4);
-                lineDataSet.setDrawValues(false);
-                lineDataSet.setLineWidth(3);
-                lineDataSet.setColor(Color.GREEN);
-                lineDataSet.setCircleColor(Color.GREEN);
-
-                List<ILineDataSet> dataSets = new ArrayList<>();
-                dataSets.add(lineDataSet);
-
-                LineData lineData = new LineData(dataSets);
-
-                mLineChart.setData(lineData);
-                XAxis xAxis = mLineChart.getXAxis();
-                xAxis.resetAxisMinimum();
-                xAxis.resetAxisMaximum();
-                mLineChart.invalidate();
-
+            updateLineChart(posts);
         }
     };
 
     private void configureLineChart() {
-        Description desc = mLineChart.getDescription();
-        desc.setEnabled(false);
+        mLineChart.getDescription().setEnabled(false);
 
         Legend leg = mLineChart.getLegend();
-        leg.setEnabled(false);
+        leg.setEnabled(true);
+        leg.setTextSize(13);
+        leg.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
+        leg.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
+
+        YAxis left = mLineChart.getAxisLeft();
+        left.setDrawZeroLine(true);
+        left.setZeroLineWidth(2);
+        left.setAxisMinimum(-1);
+        left.setAxisMaximum(1);
+        left.setTextSize(13);
+
+        mLineChart.getAxisRight().setEnabled(false);
 
         XAxis xAxis = mLineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setTextSize(13);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM_INSIDE);
 
         xAxis.setValueFormatter(new ValueFormatter() {
             private final SimpleDateFormat mFormat = new SimpleDateFormat("dd MMM", Locale.ENGLISH);
@@ -182,5 +175,41 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 return mFormat.format(new Date((long) value));
             }
         });
+    }
+
+    private void updateLineChart(List<Post> posts) {
+        Log.i(TAG, "Adding " + posts.size() + " posts");
+        ArrayList<Entry> lineEntries = new ArrayList<>();
+        for (int i = 0; i < posts.size(); i++) {
+            Post post = posts.get(i);
+            try {
+                lineEntries.add(new Entry(post.date.getTime(),
+                        post.confidencePositive - post.confidenceNegative));
+                Log.i(TAG, post.confidencePositive.toString() + " " + post.confidenceNegative.toString());
+            } catch (NullPointerException e) {
+                Log.e(TAG, e.getMessage());
+                lineEntries.add(new Entry(post.date.getTime(), 0));
+            }
+        }
+
+        LineDataSet lineDataSet = new LineDataSet(lineEntries, "Net Sentiment");
+        lineDataSet.setDrawCircles(false);
+        lineDataSet.setDrawValues(false);
+        lineDataSet.setLineWidth(2);
+        lineDataSet.setColor(Color.RED);
+        lineDataSet.setCircleColor(Color.RED);
+
+        List<ILineDataSet> dataSets = new ArrayList<>();
+        dataSets.add(lineDataSet);
+
+        LineData lineData = new LineData(dataSets);
+
+        mLineChart.setData(lineData);
+
+        XAxis xAxis = mLineChart.getXAxis();
+        xAxis.resetAxisMinimum();
+        xAxis.resetAxisMaximum();
+
+        mLineChart.invalidate();
     }
 }

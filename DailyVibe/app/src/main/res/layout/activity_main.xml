@@ -7,17 +7,47 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/postView"
-        android:layout_width="match_parent"
-        android:layout_height="75dp"
+        android:id="@+id/postDateView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
         android:layout_weight="2"
-        android:textSize="24sp"
-        app:layout_constraintBottom_toTopOf="@id/dateSpinner"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="@string/random_date_default"
+        android:textAlignment="center"
+        android:textColor="@color/grey_600"
+        android:textSize="16sp"
+        android:textStyle="italic"
+        app:layout_constraintBottom_toTopOf="@id/postTextView"
+        app:layout_constraintEnd_toStartOf="@id/refreshButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/postTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="@string/random_post_default"
+        android:textAlignment="center"
+        android:textColor="@color/grey_600"
+        android:textSize="20sp"
+        android:textStyle="italic"
+        app:layout_constraintBottom_toTopOf="@id/chartTitle"
+        app:layout_constraintEnd_toStartOf="@id/refreshButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/postDateView" />
+
+    <ImageButton
+        android:id="@+id/refreshButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toTopOf="@id/chartTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/postTextView"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_refresh_icon" />
 
     <Spinner
         android:id="@+id/dateSpinner"
@@ -28,16 +58,15 @@
         app:layout_constraintBottom_toTopOf="@id/chartLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/postView" />
+        app:layout_constraintTop_toBottomOf="@id/chartTitle" />
 
     <LinearLayout
         android:id="@+id/chartLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@id/postsButton"
         app:layout_constraintEnd_toEndOf="parent"
@@ -59,9 +88,28 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:text="@string/open_journal"
+        android:textAllCaps="false"
+        android:textColor="@color/grey_700"
+        android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/chartLayout" />
+
+    <TextView
+        android:id="@+id/chartTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/chart_title"
+        android:textAlignment="center"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/dateSpinner"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/postTextView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
