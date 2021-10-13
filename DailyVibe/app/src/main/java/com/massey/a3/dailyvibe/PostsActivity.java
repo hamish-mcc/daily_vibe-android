@@ -1,11 +1,5 @@
 package com.massey.a3.dailyvibe;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.ListAdapter;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -24,10 +18,16 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.ListAdapter;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.massey.a3.dailyvibe.database.Post;
 import com.massey.a3.dailyvibe.database.PostViewModel;
-import com.massey.a3.tensorflow.lite.textclassification.TextClassificationClient;
 import com.massey.a3.tensorflow.lite.textclassification.Result;
+import com.massey.a3.tensorflow.lite.textclassification.TextClassificationClient;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -50,7 +50,7 @@ public class PostsActivity extends AppCompatActivity {
     private Date mUseDate;
     private SimpleDateFormat mDateFormat;
     private String mDateString;
-    private PostViewModel mPostViewModel;
+    private static PostViewModel mPostViewModel;
     private PostsAdapter mPostsAdapter;
 
     public static class PostsAdapter extends ListAdapter<Post, PostsAdapter.PostViewHolder> {
@@ -70,6 +70,26 @@ public class PostsActivity extends AppCompatActivity {
         public void onBindViewHolder(PostViewHolder vh, int position) {
             Post current = getItem(position);
             vh.bind(current);
+            vh.itemView.setOnLongClickListener(v -> {
+                TextView postText = v.findViewById(R.id.postText);
+                int postId = Integer.parseInt((String) postText.getContentDescription());
+                // Long clicking a post gives opens a dialog for deleting it
+                AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
+
+                builder.setMessage(R.string.dialog_message)
+                        .setCancelable(false)
+                        .setPositiveButton("Yes", (dialog, id) -> {
+                            // Delete the post
+                            mPostViewModel.deletePost(postId);
+                        })
+                        .setNegativeButton("No", (dialog, id) -> dialog.cancel());
+                // Create dialog box
+                AlertDialog alert = builder.create();
+                // Set title
+                alert.setTitle(R.string.dialog_title);
+                alert.show();
+                return true;
+            });
         }
 
         public static class PostViewHolder extends RecyclerView.ViewHolder {
@@ -88,10 +108,10 @@ public class PostsActivity extends AppCompatActivity {
 
             @SuppressLint({"SetTextI18n", "DefaultLocale"})
             public void bind(Post p) {
+                postText.setContentDescription(String.valueOf(p.uid));
                 postText.setText(p.text);
                 posConfidence.setText(p.confidencePositive.toString());
-                // TODO Implement a range of emojis depending on score
-                //  https://www.unicode.org/emoji/charts/full-emoji-list.html
+                //  Emojis from https://www.unicode.org/emoji/charts/full-emoji-list.html
                 String pos = String.format("%s %.2f%%", getEmojiByUnicode(0x1F642), p.confidencePositive*100);
                 String neg = String.format("%s %.2f%%", getEmojiByUnicode(0x1F641), p.confidenceNegative*100);
                 posConfidence.setText(pos);
@@ -126,6 +146,7 @@ public class PostsActivity extends AppCompatActivity {
         postsView.setAdapter(mPostsAdapter);
         postsView.setLayoutManager(new LinearLayoutManager(this));
 
+
         // Show current date
         Date today = Calendar.getInstance().getTime();
         mUseDate = removeTime(today);
@@ -159,18 +180,23 @@ public class PostsActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        Log.i(TAG, "Inflate menu");
-        super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.posts_menu, menu);
-        return true;
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.deletePosts) {
-            mPostViewModel.deleteAll();
+        if (item.getItemId() == R.id.tf_icon) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.tf_info)
+                    .setCancelable(false)
+                    .setNeutralButton("Close", (dialog, id) -> dialog.cancel());
+            // Create dialog box
+            AlertDialog alert = builder.create();
+            // Set title
+            alert.setTitle(R.string.info_dialog_title);
+            alert.show();
             return true;
         }
         return false;

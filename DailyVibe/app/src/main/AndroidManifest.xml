@@ -9,8 +9,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DailyVibe">
-        <activity android:name="com.massey.a3.dailyvibe.PostsActivity"
-            android:windowSoftInputMode="adjustResize"></activity>
+        <activity
+            android:name="com.massey.a3.dailyvibe.PostsActivity"
+            android:label="@string/post_activity_title"
+            android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name="com.massey.a3.dailyvibe.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

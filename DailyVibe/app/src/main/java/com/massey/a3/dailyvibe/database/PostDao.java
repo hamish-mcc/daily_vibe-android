@@ -2,9 +2,9 @@ package com.massey.a3.dailyvibe.database;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
-import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
+
 import java.util.Date;
 import java.util.List;
 
@@ -19,14 +19,10 @@ public interface PostDao {
     @Insert
     void insertPost(Post post);
 
-    @Delete
-    void deletePost(Post post);
-
-    @Query("DELETE FROM posts")
-    void deleteAllPosts();
+    @Query("DELETE FROM posts WHERE uid = (:uid)")
+    void deletePost(int uid);
 
     @Query("SELECT 0 AS uid, '' AS text, date, avg(confidencePositive) as confidencePositive, avg(confidenceNegative) as confidenceNegative FROM posts WHERE date > (:from) GROUP BY (date)")
     LiveData<List<Post>> getPostsAfter(Date from);
 
-    // TODO Querying the variance might also be useful?
 }

@@ -6,7 +6,6 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 public class PostRepository {
@@ -25,7 +24,12 @@ public class PostRepository {
         return mPostDao.getAllByDate(date);
     }
 
-    void deleteAll() { mPostDao.deleteAllPosts(); }
+    void deletePost(int uid) {
+        PostDatabase.databaseWriteExecutor.execute(() -> {
+            Log.i(TAG, "Deleting post " + uid);
+            mPostDao.deletePost(uid);
+        });
+    }
 
     LiveData<Post> getRandom() { return mPostDao.getRandom(); }
 

@@ -1,9 +1,17 @@
 package com.massey.a3.dailyvibe;
 
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -16,7 +24,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -35,6 +42,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private static final String TAG = "MainActivity";
@@ -53,6 +61,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Spannable title= new SpannableString(getTitle());
+        title.setSpan(new ForegroundColorSpan(Color.WHITE), 0, title.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        title.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.burntOrange)), 1, 3, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        setTitle(title);
+
         //UI
         Button goToPosts = findViewById(R.id.postsButton);
         ImageButton refreshRandomPost = findViewById(R.id.refreshButton);
@@ -64,9 +77,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             this.startActivity(openPosts);
         });
 
-        refreshRandomPost.setOnClickListener((View v) -> {
-            mPostViewModel.getRandom().observe(this, mPostObserver);
-        });
+        refreshRandomPost.setOnClickListener((View v) -> mPostViewModel.getRandom().observe(this, mPostObserver));
+
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            postDateView.setVisibility(View.GONE);
+            postTextView.setVisibility(View.GONE);
+            refreshRandomPost.setVisibility(View.GONE);
+            Objects.requireNonNull(getSupportActionBar()).hide();
+        }
 
         // Set up spinner
         Spinner dateSpinner = findViewById(R.id.dateSpinner);
@@ -81,19 +99,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Get data
         mPostViewModel = new PostViewModel(this.getApplication());
 
-        mPostObserver = new Observer<Post>() {
-            @Override
-            public void onChanged(Post post) {
-                try {
-                    DateFormat format = new SimpleDateFormat(USE_DATE_FORMAT, Locale.getDefault());
-                    String dateString = format.format(post.date);
-                    String displayDate = String.format("A reflection from %s", dateString);
-                    postDateView.setText(displayDate);
-                    String displayText = String.format("\"%s\"", post.text);
-                    postTextView.setText(displayText);
-                } catch (NullPointerException e) {
-                    Log.e(TAG, e.getMessage());
-                }
+        mPostObserver = post -> {
+            try {
+                DateFormat format = new SimpleDateFormat(USE_DATE_FORMAT, Locale.getDefault());
+                String dateString = format.format(post.date);
+                String displayDate = String.format("A reflection from %s", dateString);
+                postDateView.setText(displayDate);
+                String displayText = String.format("\"%s\"", post.text);
+                postTextView.setText(displayText);
+            } catch (NullPointerException e) {
+                Log.e(TAG, e.getMessage());
             }
         };
 
@@ -101,6 +116,29 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         mLineChart = findViewById(R.id.activity_main_linechart);
         configureLineChart();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.tf_icon) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.tf_info)
+                    .setCancelable(false)
+                    .setNeutralButton("Close", (dialog, id) -> dialog.cancel());
+            // Create dialog box
+            AlertDialog alert = builder.create();
+            // Set title
+            alert.setTitle(R.string.info_dialog_title);
+            alert.show();
+            return true;
+        }
+        return false;
     }
 
     //Performing action onItemSelected and onNothing selected
@@ -136,12 +174,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mPostViewModel.getPostsAfter(mFromDate).observe(this, dataObserver);
     }
 
-    public final Observer<List<Post>> dataObserver = new Observer<List<Post>>() {
-        @Override
-        public void onChanged(List<Post> posts) {
-            updateLineChart(posts);
-        }
-    };
+    public final Observer<List<Post>> dataObserver = this::updateLineChart;
 
     private void configureLineChart() {
         mLineChart.getDescription().setEnabled(false);

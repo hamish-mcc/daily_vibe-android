@@ -6,7 +6,6 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 public class PostViewModel extends AndroidViewModel {
@@ -29,6 +28,6 @@ public class PostViewModel extends AndroidViewModel {
         mRepository.insert(post);
     }
 
-    public void deleteAll() {mRepository.deleteAll();}
+    public void deletePost(int uid) {mRepository.deletePost(uid);}
 
 }
