@@ -61,24 +61,27 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Style title text
         Spannable title= new SpannableString(getTitle());
         title.setSpan(new ForegroundColorSpan(Color.WHITE), 0, title.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         title.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.burntOrange)), 1, 3, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         setTitle(title);
 
-        //UI
+        // Set up UI
         Button goToPosts = findViewById(R.id.postsButton);
         ImageButton refreshRandomPost = findViewById(R.id.refreshButton);
         TextView postDateView = findViewById(R.id.postDateView);
         TextView postTextView = findViewById(R.id.postTextView);
 
         goToPosts.setOnClickListener((View v) -> {
+            // Start PostsActivity
             Intent openPosts = new Intent(MainActivity.this, PostsActivity.class);
             this.startActivity(openPosts);
         });
 
         refreshRandomPost.setOnClickListener((View v) -> mPostViewModel.getRandom().observe(this, mPostObserver));
 
+        // Remove random posts part of layout to optimise viewing in landscape
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             postDateView.setVisibility(View.GONE);
             postTextView.setVisibility(View.GONE);
@@ -96,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         dateSpinner.setAdapter(aa);
 
 
-        // Get data
+        // Init database and get a random post
         mPostViewModel = new PostViewModel(this.getApplication());
 
         mPostObserver = post -> {
@@ -120,12 +123,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
+        // Add tensorflow icon to action bar
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // Display app info when icon is clicked
         if (item.getItemId() == R.id.tf_icon) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(R.string.tf_info)
@@ -141,7 +146,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return false;
     }
 
-    //Performing action onItemSelected and onNothing selected
     @Override
     public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long id) {
         // Update the history interval and retrieve posts
@@ -167,6 +171,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onNothingSelected(AdapterView<?> arg0) {
+        // Default history is -7 days
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DATE, -7);
         mFromDate = calendar.getTime();
@@ -174,8 +179,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mPostViewModel.getPostsAfter(mFromDate).observe(this, dataObserver);
     }
 
+    // Update line chart when the data changes
     public final Observer<List<Post>> dataObserver = this::updateLineChart;
 
+    // Line chart display config
     private void configureLineChart() {
         mLineChart.getDescription().setEnabled(false);
 
@@ -210,18 +217,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
     }
 
+    // Add data to line chart
     private void updateLineChart(List<Post> posts) {
         Log.i(TAG, "Adding " + posts.size() + " posts");
         ArrayList<Entry> lineEntries = new ArrayList<>();
         for (int i = 0; i < posts.size(); i++) {
             Post post = posts.get(i);
             try {
+                // X = date, Y = positive avg sentiment - negative avg sentiment
                 lineEntries.add(new Entry(post.date.getTime(),
                         post.confidencePositive - post.confidenceNegative));
-                Log.i(TAG, post.confidencePositive.toString() + " " + post.confidenceNegative.toString());
             } catch (NullPointerException e) {
                 Log.e(TAG, e.getMessage());
-                lineEntries.add(new Entry(post.date.getTime(), 0));
             }
         }
 

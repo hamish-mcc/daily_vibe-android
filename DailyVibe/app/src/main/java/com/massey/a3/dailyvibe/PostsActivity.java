@@ -57,7 +57,7 @@ public class PostsActivity extends AppCompatActivity {
     private PostsAdapter mPostsAdapter;
 
     public static class PostsAdapter extends ListAdapter<Post, PostsAdapter.PostViewHolder> {
-
+        // Adapter to display posts
         protected PostsAdapter(DiffUtil.ItemCallback<Post> diffCallback) {
             super(diffCallback);
         }
@@ -76,7 +76,7 @@ public class PostsActivity extends AppCompatActivity {
             vh.itemView.setOnLongClickListener(v -> {
                 TextView postText = v.findViewById(R.id.postText);
                 int postId = Integer.parseInt((String) postText.getContentDescription());
-                // Long clicking a post gives opens a dialog for deleting it
+                // Long clicking a post opens a dialog for deleting it
                 AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
 
                 builder.setMessage(R.string.dialog_message)
@@ -114,7 +114,6 @@ public class PostsActivity extends AppCompatActivity {
                 postText.setContentDescription(String.valueOf(p.uid));
                 postText.setText(p.text);
                 posConfidence.setText(p.confidencePositive.toString());
-                //  Emojis from https://www.unicode.org/emoji/charts/full-emoji-list.html
                 String pos = String.format("%s %.2f%%", getEmojiByUnicode(0x1F642), p.confidencePositive*100);
                 String neg = String.format("%s %.2f%%", getEmojiByUnicode(0x1F641), p.confidenceNegative*100);
                 posConfidence.setText(pos);
@@ -137,7 +136,7 @@ public class PostsActivity extends AppCompatActivity {
     }
 
     public class OnSwipeTouchListener implements View.OnTouchListener {
-
+        // User can swipe left and right to change the date open in the journal
         private final GestureDetector gestureDetector;
 
         public OnSwipeTouchListener (Context ctx){
@@ -184,7 +183,7 @@ public class PostsActivity extends AppCompatActivity {
         }
 
         public void onSwipeRight() {
-            Log.i(TAG, "right swipe");
+            // Go back 1 day
             Calendar cal = Calendar.getInstance();
             cal.setTime(mUseDate);
             cal.add(Calendar.DATE, -1);
@@ -195,7 +194,7 @@ public class PostsActivity extends AppCompatActivity {
         }
 
         public void onSwipeLeft() {
-            Log.i(TAG, "left swipe");
+            // Go forward 1 day
             Calendar cal = Calendar.getInstance();
             long today = cal.getTimeInMillis();
             cal.setTime(mUseDate);
@@ -238,23 +237,21 @@ public class PostsActivity extends AppCompatActivity {
         mDateView = findViewById(R.id.dateTextView);
         mDateView.setText(mDateString);
 
-
-        // Connect to DB
+        // Get data from DB
         refreshPosts();
 
-        // Change the date
+        // Button to open a date picker dialog
         ImageButton dateButton = findViewById(R.id.buttonDateSelect);
-
         dateButton.setOnClickListener((View v) -> changeDate());
 
-        // Set up sentiment analysis
+        // Set up sentiment analysis engine
         mClient = new TextClassificationClient(getApplicationContext());
         mHandler = new Handler(Looper.getMainLooper());
 
         // Input
         mInputPostText = findViewById(R.id.editPost);
         Button postButton = findViewById(R.id.buttonPost);
-
+        // Clicking button creates new post and clears the input text view
         postButton.setOnClickListener((View v) -> {
             newPost(mInputPostText.getText().toString());
             mInputPostText.setText("");
@@ -263,12 +260,14 @@ public class PostsActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
+        // Add tensorflow icon to action bar
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // Display app info when icon is clicked
         if (item.getItemId() == R.id.tf_icon) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(R.string.tf_info)
@@ -315,11 +314,12 @@ public class PostsActivity extends AppCompatActivity {
                     Post post = new Post(mUseDate, text, confidence.get("positive"),
                             confidence.get("negative"));
                     mPostViewModel.insert(post);
-                    refreshPosts();
                 });
+        refreshPosts();
     }
 
     private void changeDate() {
+        // Select a new date using a date picker dialog
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(mUseDate);
         int year = calendar.get(Calendar.YEAR);
@@ -342,6 +342,7 @@ public class PostsActivity extends AppCompatActivity {
     }
 
     public static Date removeTime(Date date) {
+        // Remove time of day, as posts are saved by date only
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
         cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -356,7 +357,8 @@ public class PostsActivity extends AppCompatActivity {
     }
 
     public void refreshPosts() {
-        Log.i(TAG, "getPosts" + mUseDate.toString());
+        // Get data from the database
+        Log.i(TAG, "Get posts for " + mUseDate.toString());
         mPostViewModel = new PostViewModel(this.getApplication());
         mPostViewModel.getAllPostsByDate(mUseDate).observe(this, mPostsAdapter::submitList);
     }

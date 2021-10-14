@@ -4,6 +4,9 @@ import androidx.room.TypeConverter;
 
 import java.util.Date;
 
+// The converter is used to convert Date to Long (and vice-versa)
+// SQLite cannot store Date types, so Long is used instead
+
 public class Converters {
     @TypeConverter
     public static Date fromTimestamp(Long value) {

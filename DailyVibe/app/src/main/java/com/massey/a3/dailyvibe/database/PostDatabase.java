@@ -10,6 +10,9 @@ import androidx.room.TypeConverters;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+// Design pattern for interacting with the DB reference from Android Room tutorial
+// https://developer.android.com/codelabs/android-room-with-a-view#0
+
 @Database(entities = {Post.class}, version = 1, exportSchema = false)
 @TypeConverters({Converters.class})
 public abstract class PostDatabase extends RoomDatabase {

@@ -8,6 +8,9 @@ import androidx.lifecycle.LiveData;
 import java.util.Date;
 import java.util.List;
 
+// Design pattern for interacting with the DB reference from Android Room tutorial
+// https://developer.android.com/codelabs/android-room-with-a-view#0
+
 public class PostViewModel extends AndroidViewModel {
     private final PostRepository mRepository;
 

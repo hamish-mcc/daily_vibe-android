@@ -8,6 +8,9 @@ import androidx.lifecycle.LiveData;
 import java.util.Date;
 import java.util.List;
 
+// Design pattern for interacting with the DB reference from Android Room tutorial
+// https://developer.android.com/codelabs/android-room-with-a-view#0
+
 public class PostRepository {
     private static final String TAG = "PostRepository";
     private final PostDao mPostDao;
@@ -18,12 +21,12 @@ public class PostRepository {
         Log.i(TAG, "Initialized DB");
     }
 
-    // Room executes all queries on a separate thread.
     // Observed LiveData will notify the observer when the data has changed.
     LiveData<List<Post>> getAllPostsByDate(Date date) {
         return mPostDao.getAllByDate(date);
     }
 
+    // Posts are deleted on a background thread
     void deletePost(int uid) {
         PostDatabase.databaseWriteExecutor.execute(() -> {
             Log.i(TAG, "Deleting post " + uid);
@@ -38,8 +41,7 @@ public class PostRepository {
         return mPostDao.getPostsAfter(date);
     }
 
-    // You must call this on a non-UI thread or your app will throw an exception. Room ensures
-    // that you're not doing any long running operations on the main thread, blocking the UI.
+    // Posts are inserted on a background thread
     void insert(Post post) {
         PostDatabase.databaseWriteExecutor.execute(() -> {
             Log.i(TAG, "Inserted " + post.text + " on " + post.date.toString());

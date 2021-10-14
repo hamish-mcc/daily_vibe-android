@@ -16,6 +16,11 @@
 
 package com.massey.a3.tensorflow.lite.textclassification;
 
+import android.annotation.SuppressLint;
+import org.jetbrains.annotations.NotNull;
+
+// This code has been reused from https://www.tensorflow.org/lite/examples/text_classification/overview
+
 /** An immutable result returned by a TextClassifier describing what was classified. */
 public class Result implements Comparable<Result> {
     /**
@@ -36,10 +41,6 @@ public class Result implements Comparable<Result> {
         this.confidence = confidence;
     }
 
-    public String getId() {
-        return id;
-    }
-
     public String getTitle() {
         return title;
     }
@@ -48,8 +49,9 @@ public class Result implements Comparable<Result> {
         return confidence;
     }
 
+    @SuppressLint("DefaultLocale")
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         String resultString = "";
         if (id != null) {
             resultString += "[" + id + "] ";

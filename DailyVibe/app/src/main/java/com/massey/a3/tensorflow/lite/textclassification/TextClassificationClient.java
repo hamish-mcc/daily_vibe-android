@@ -25,6 +25,10 @@ import java.util.List;
 import org.tensorflow.lite.support.label.Category;
 import org.tensorflow.lite.task.text.nlclassifier.NLClassifier;
 
+// This code has been reused from https://www.tensorflow.org/lite/examples/text_classification/overview
+// I trained a new model, using a different dataset, to the original example at the link above.
+// I referred to https://www.tensorflow.org/lite/tutorials/model_maker_text_classification for model training
+
 /** Load TfLite model and provide predictions with task api. */
 public class TextClassificationClient {
     private static final String TAG = "TaskApi";
