@@ -5,13 +5,13 @@
     <string name="post">Post</string>
     <string name="post_hint">What\'s on your mind?</string>
     <string name="posts_toolbar_title">Your Journal</string>
-    <string name="random_post_default">No post found</string>
-    <string name="random_date_default">Reflection from [DATE]</string>
+    <string name="random_post_default">Oops, no posts found</string>
+    <string name="random_date_default">Reflection from…</string>
     <string name="chart_title">Mood Tracker</string>
     <string name="dialog_message">Are you sure?</string>
     <string name="dialog_title">Delete Post</string>
     <string name="post_activity_title">Your Journal</string>
     <string name="menu_main">Main Menu</string>
-    <string name="tf_info">Daily Vibe performs Sentiment Analysis on journal entries using TensorFlow Lite.\n\nInference is performed using an Averaging Word Embedding model architecture, trained on the SST-2 (Stanford Sentiment Treebank) dataset.\n\nAll user data is analysed and stored on the device.</string>
+    <string name="tf_info">Daily Vibe performs Sentiment Analysis on journal posts using TensorFlow Lite.\n\nInference is performed using an Averaging Word Embedding model architecture, trained on the SST-2 (Stanford Sentiment Treebank) dataset.\n\nAll user data is analysed and stored on the device.</string>
     <string name="info_dialog_title">About Daily Vibe</string>
 </resources>

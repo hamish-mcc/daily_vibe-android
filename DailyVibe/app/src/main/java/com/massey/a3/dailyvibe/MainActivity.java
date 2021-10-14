@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         Legend leg = mLineChart.getLegend();
         leg.setEnabled(true);
-        leg.setTextSize(13);
+        leg.setTextSize(12);
         leg.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
         leg.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
 
@@ -190,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         left.setZeroLineWidth(2);
         left.setAxisMinimum(-1);
         left.setAxisMaximum(1);
-        left.setTextSize(13);
+        left.setTextSize(12);
 
         mLineChart.getAxisRight().setEnabled(false);
 

@@ -3,13 +3,16 @@ package com.massey.a3.dailyvibe;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -133,7 +136,83 @@ public class PostsActivity extends AppCompatActivity {
         }
     }
 
+    public class OnSwipeTouchListener implements View.OnTouchListener {
 
+        private final GestureDetector gestureDetector;
+
+        public OnSwipeTouchListener (Context ctx){
+            gestureDetector = new GestureDetector(ctx, new GestureListener());
+        }
+
+        @SuppressLint("ClickableViewAccessibility")
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            return gestureDetector.onTouchEvent(event);
+        }
+
+        private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
+
+            private static final int SWIPE_THRESHOLD = 100;
+            private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                boolean result = false;
+                try {
+                    float diffY = e2.getY() - e1.getY();
+                    float diffX = e2.getX() - e1.getX();
+                    if (Math.abs(diffX) > Math.abs(diffY)) {
+                        if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                            if (diffX > 0) {
+                                onSwipeRight();
+                            } else {
+                                onSwipeLeft();
+                            }
+                            result = true;
+                        }
+                    }
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                }
+                return result;
+            }
+        }
+
+        public void onSwipeRight() {
+            Log.i(TAG, "right swipe");
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(mUseDate);
+            cal.add(Calendar.DATE, -1);
+            mUseDate = cal.getTime();
+            mDateString = mDateFormat.format(mUseDate);
+            mDateView.setText(mDateString);
+            refreshPosts();
+        }
+
+        public void onSwipeLeft() {
+            Log.i(TAG, "left swipe");
+            Calendar cal = Calendar.getInstance();
+            long today = cal.getTimeInMillis();
+            cal.setTime(mUseDate);
+            cal.add(Calendar.DATE, 1);
+            // Can't select a date in the future
+            if (cal.getTimeInMillis() <= today) {
+                mUseDate = cal.getTime();
+                mDateString = mDateFormat.format(mUseDate);
+                mDateView.setText(mDateString);
+                refreshPosts();
+            }
+        }
+
+    }
+
+
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -146,6 +225,8 @@ public class PostsActivity extends AppCompatActivity {
         postsView.setAdapter(mPostsAdapter);
         postsView.setLayoutManager(new LinearLayoutManager(this));
 
+        // Swipe left or right changes the date
+        postsView.setOnTouchListener(new OnSwipeTouchListener(PostsActivity.this));
 
         // Show current date
         Date today = Calendar.getInstance().getTime();
@@ -156,6 +237,7 @@ public class PostsActivity extends AppCompatActivity {
 
         mDateView = findViewById(R.id.dateTextView);
         mDateView.setText(mDateString);
+
 
         // Connect to DB
         refreshPosts();
@@ -245,16 +327,17 @@ public class PostsActivity extends AppCompatActivity {
         int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(PostsActivity.this,
-                (datePicker, year1, month1, day) -> {
+                (datePicker, newYear, newMonth, newDay) -> {
                     Calendar cal = Calendar.getInstance();
                     cal.setTimeInMillis(0);
-                    cal.set(year1, month1, day, 0, 0, 0);
+                    cal.set(newYear, newMonth, newDay, 0, 0, 0);
                     mUseDate = cal.getTime();
                     mDateString = mDateFormat.format(mUseDate);
                     mDateView.setText(mDateString);
                     Log.i(TAG, "Using date " + mUseDate.toString());
                     refreshPosts();
                 }, year, month, dayOfMonth);
+        datePickerDialog.getDatePicker().setMaxDate(calendar.getTimeInMillis());
         datePickerDialog.show();
     }
 
